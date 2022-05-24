@@ -150,11 +150,13 @@ void SiSetOpenVPNAndSSTPConfig(SERVER *s, OPENVPN_SSTP_CONFIG *c)
 		{
 			if (s->DisableOpenVPNServer)
 			{
-				OvsApplyUdpPortList(s->OpenVpnServerUdp, "");
+//				OvsApplyUdpPortList(s->OpenVpnServerUdp, "");
+				OvsApplyUdpPortList(s->OpenVpnServerUdp, "", NULL);
 			}
 			else
 			{
-				OvsApplyUdpPortList(s->OpenVpnServerUdp, s->OpenVpnServerUdpPorts);
+//				OvsApplyUdpPortList(s->OpenVpnServerUdp, s->OpenVpnServerUdpPorts);
+				OvsApplyUdpPortList(s->OpenVpnServerUdp, s->OpenVpnServerUdpPorts, &s->ListenIP);
 			}
 		}
 	}
@@ -5856,6 +5858,7 @@ void SiLoadServerCfg(SERVER *s, FOLDER *f)
 	}
 
 	s->DontBackupConfig = CfgGetBool(f, "DontBackupConfig");
+	CfgGetIp(f, "ListenIP", &s->ListenIP);
 
 	if (CfgIsItem(f, "BackupConfigOnlyWhenModified"))
 	{
@@ -6319,6 +6322,7 @@ void SiWriteServerCfg(FOLDER *f, SERVER *s)
 	CfgAddBool(f, "DontBackupConfig", s->DontBackupConfig);
 	CfgAddBool(f, "BackupConfigOnlyWhenModified", s->BackupConfigOnlyWhenModified);
 
+	CfgAddIp(f, "ListenIP", &s->ListenIP);
 	if (s->Logger != NULL)
 	{
 		CfgAddInt(f, "ServerLogSwitchType", s->Logger->SwitchType);
@@ -11007,8 +11011,8 @@ SERVER *SiNewServerEx(bool bridge, bool in_client_inner_server, bool relay_serve
 	s->Cedar->CheckExpires = true;
 	s->ServerListenerList = NewList(CompareServerListener);
 	s->StartTime = SystemTime64();
-	s->Syslog = NewSysLog(NULL, 0);
-	s->SyslogLock = NewLock();
+//	s->Syslog = NewSysLog(NULL, 0);
+//	s->SyslogLock = NewLock();
 	s->TasksFromFarmControllerLock = NewLock();
 
 	if (bridge)
@@ -11039,6 +11043,9 @@ SERVER *SiNewServerEx(bool bridge, bool in_client_inner_server, bool relay_serve
 
 	// Initialize the configuration
 	SiInitConfiguration(s);
+
+	s->Syslog = NewSysLog(NULL, 0, &s->Cedar->Server->ListenIP);
+	s->SyslogLock = NewLock();
 
 	SetFifoCurrentReallocMemSize(MEM_FIFO_REALLOC_MEM_SIZE);
 
