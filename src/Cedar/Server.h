@@ -362,6 +362,7 @@ struct SERVER
 
 	volatile UINT NatTGlobalUdpPort;	// NAT-T global UDP port
 
+	IP ListenIP;						// Listen IP
 	bool StrictSyslogDatetimeFormat;	// Make syslog datetime format strict RFC3164
 	bool DisableJsonRpcWebApi;					// Disable JSON-RPC Web API
 };
